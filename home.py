@@ -1,10 +1,10 @@
 import streamlit as st
 
 # Set page config
-st.set_page_config(page_title="Chatbot", page_icon="🤖", layout="centered")
+st.set_page_config(page_title="DocAI", page_icon="🤖", layout="centered")
 
 # Title
-st.title("Chatbot Prediction System")
+st.title("DocAI Prediction System")
 st.write("Choose a prediction model:")
 
 # Buttons for navigation
