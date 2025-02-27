@@ -1,12 +1,10 @@
 
 
+# Identify categorical and numerical columns (Removed RestingBP and RestingECG)
+categorical_cols = ['Sex', 'ChestPainType', 'ExerciseAngina', 'ST_Slope']
+numerical_cols = ['Age', 'Cholesterol', 'MaxHR', 'Oldpeak']
 
-# Identify categorical and numerical columns
-categorical_cols = ['Sex', 'ChestPainType', 'RestingECG', 'ExerciseAngina', 'ST_Slope']
-numerical_cols = ['Age', 'Cholesterol', 'MaxHR', 'Oldpeak']  # Removed 'RestingBP'
-
-# Drop unnecessary columns
-data = data.drop(['FastingBS', 'ST_Slope_Flat', 'RestingBP'], axis=1, errors='ignore')  # Dropped 'RestingBP'
+data = data.drop(['FastingBS', 'ST_Slope_Flat', 'RestingBP', 'RestingECG'], axis=1, errors='ignore')
 
 # Define transformations
 preprocessor = ColumnTransformer([
@@ -43,7 +41,7 @@ with open("model1.pkl", "wb") as model_file:
 with open("preprocessor1.pkl", "wb") as preprocessor_file:
     pickle.dump(preprocessor, preprocessor_file)
 
-# Define function for app.py
+# Define function for prediction
 def predict_heart_disease(user_input):
     user_input = np.array(user_input).reshape(1, -1)
     transformed_input = preprocessor.transform(user_input)
