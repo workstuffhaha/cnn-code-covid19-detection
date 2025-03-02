@@ -5,34 +5,44 @@ import numpy as np
 # Load model and scaler
 with open("Models/student_depression_model.pkl", "rb") as model_file:
     model = pickle.load(model_file)
-
 with open("Models/student_depression_scaler.pkl", "rb") as scaler_file:
     scaler = pickle.load(scaler_file)
 
-# Streamlit UI
-st.title("Student Depression Prediction")
-st.write("Provide the following details to assess the risk of depression.")
+# Define input sequence
+questions = [
+    ("Age", "Enter your age:"),
+    ("CGPA", "Enter your CGPA:"),
+    ("Financial Stress", "Rate your financial stress (1-10):"),
+    ("Work/Study Hours per Day", "How many hours do you work/study per day?"),
+    ("Academic Pressure", "Rate your academic pressure (1-10):")
+]
 
-# Sleep Duration Mapping
-sleep_mapping = {
-    "Less than 5 hours": 1,
-    "5-6 hours": 2,
-    "7-8 hours (Ideal)": 3,
-    "More than 8 hours": 4
-}
+# Initialize session state
+if 'step' not in st.session_state:
+    st.session_state.step = 0
+    st.session_state.inputs = []
 
-# User Inputs
-academic_pressure = st.slider("Academic Pressure (0-5):", 0, 5, 2)
-sleep_duration = st.selectbox("Select Sleep Duration:", list(sleep_mapping.keys()))
-financial_stress = st.slider("Financial Stress (1-5):", 1, 5, 3)
-
-# Convert Sleep Duration
-sleep_value = sleep_mapping[sleep_duration]
-
-# Prediction Button
-if st.button("Predict"):
-    user_input = np.array([academic_pressure, sleep_value, financial_stress]).reshape(1, -1)
-    transformed_input = scaler.transform(user_input)
-    prediction = model.predict(transformed_input)
-    result = "Yes, you might have depression." if prediction[0] == 1 else "No, you do not have depression."
-    st.success(result)
+# Display questions one by one
+if st.session_state.step < len(questions):
+    feature, question = questions[st.session_state.step]
+    user_input = st.number_input(question, min_value=0.0, step=0.1, format="%.1f")
+    
+    if st.button("Next"):
+        st.session_state.inputs.append(user_input)
+        st.session_state.step += 1
+        st.experimental_rerun()
+else:
+    # Prepare input for prediction
+    X_new = np.array(st.session_state.inputs).reshape(1, -1)
+    X_new_scaled = scaler.transform(X_new)
+    prediction = model.predict(X_new_scaled)[0]
+    
+    # Display result
+    st.subheader("Prediction Result")
+    st.write("Depression Risk:" , "Yes" if prediction == 1 else "No")
+    
+    # Reset button
+    if st.button("Restart"):
+        st.session_state.step = 0
+        st.session_state.inputs = []
+        st.experimental_rerun()
