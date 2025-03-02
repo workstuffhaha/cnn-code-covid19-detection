@@ -11,7 +11,7 @@ data = pd.read_csv(r"C:\Users\Prachee\Desktop\Projects\Chatbot\Dataset\mental_he
 # Select relevant features
 selected_features = ["Academic Pressure", "Sleep Duration", "Financial Stress"]
 X = data[selected_features]
-y = data["Depression(outcome)"]
+y = data["Depression"]  # Updated column name
 
 # Encode Sleep Duration
 sleep_mapping = {
@@ -20,7 +20,10 @@ sleep_mapping = {
     "7-8 hours": 3,  # Ideal range
     "more than 8 hours": 4
 }
-X["Sleep Duration"] = X["Sleep Duration"].map(sleep_mapping)
+X.loc[:, "Sleep Duration"] = X["Sleep Duration"].map(sleep_mapping)
+
+# Handle missing values
+X.fillna(X.median(), inplace=True)  # Fill NaNs with median values
 
 # Split dataset
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
