@@ -1,37 +1,53 @@
-import pandas as pd
+import streamlit as st
 import pickle
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score
+import numpy as np
 
-# Load the dataset
-data = pd.read_csv(r"C:\Users\Prachee\Desktop\Projects\Chatbot\Dataset\Healthcare-Diabetes.csv")
+# Load the trained model and scaler
+with open("student_depression_model.pkl", "rb") as model_file:
+    model = pickle.load(model_file)
 
-# Split the data into features (X) and target (y)
-X = data.drop("Outcome", axis=1)
-y = data["Outcome"]
+with open("student_depression_scaler.pkl", "rb") as scaler_file:
+    scaler = pickle.load(scaler_file)
 
-# Split the data into training and testing sets
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+st.title("Student Depression Prediction")
 
-# Standardize features
-scaler = StandardScaler()
-X_train_scaled = scaler.fit_transform(X_train)
-X_test_scaled = scaler.transform(X_test)
+# Collect user inputs one by one
+age = st.number_input("Enter your Age:", min_value=10, max_value=100, step=1)
+if st.button("Next", key="age_next"):
+    st.session_state.age = age
+    st.session_state.step = 1
 
-# Create and train the logistic regression model
-model = LogisticRegression()
-model.fit(X_train_scaled, y_train)
+if "step" in st.session_state and st.session_state.step >= 1:
+    cgpa = st.number_input("Enter your CGPA:", min_value=0.0, max_value=10.0, step=0.1)
+    if st.button("Next", key="cgpa_next"):
+        st.session_state.cgpa = cgpa
+        st.session_state.step = 2
 
-# Save the model and scaler
-with open("diabetes_model.pkl", "wb") as model_file:
-    pickle.dump(model, model_file)
+if "step" in st.session_state and st.session_state.step >= 2:
+    work_study_hours = st.number_input("Enter Work/Study Hours per Day:", min_value=0, max_value=24, step=1)
+    if st.button("Next", key="work_hours_next"):
+        st.session_state.work_study_hours = work_study_hours
+        st.session_state.step = 3
 
-with open("diabetes_scaler.pkl", "wb") as scaler_file:
-    pickle.dump(scaler, scaler_file)
+if "step" in st.session_state and st.session_state.step >= 3:
+    academic_pressure = st.slider("Rate your Academic Pressure (1-10):", min_value=1, max_value=10)
+    if st.button("Next", key="academic_pressure_next"):
+        st.session_state.academic_pressure = academic_pressure
+        st.session_state.step = 4
 
-# Evaluate the model
-y_pred = model.predict(X_test_scaled)
-accuracy = accuracy_score(y_test, y_pred)
-print("Model Accuracy:", accuracy)
+if "step" in st.session_state and st.session_state.step >= 4:
+    financial_stress = st.slider("Rate your Financial Stress (1-10):", min_value=1, max_value=10)
+    if st.button("Predict", key="predict"):
+        st.session_state.financial_stress = financial_stress
+        st.session_state.step = 5
+
+# Make prediction
+if "step" in st.session_state and st.session_state.step == 5:
+    user_input = np.array([
+        [st.session_state.age, st.session_state.cgpa, st.session_state.work_study_hours,
+         st.session_state.academic_pressure, st.session_state.financial_stress]
+    ])
+    user_input_scaled = scaler.transform(user_input)
+    prediction = model.predict(user_input_scaled)[0]
+    result = "Likely Depressed" if prediction == 1 else "Not Depressed"
+    st.success(f"Prediction: {result}")
